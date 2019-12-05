@@ -727,7 +727,12 @@ namespace WorkItemImport
 
         private void EnsureAssigneeField(WiRevision rev, WorkItem wi)
         {
-            string assignedTo = wi.Fields[WiFieldReference.AssignedTo].Value.ToString();
+            string assignedTo = string.Empty;
+
+            if(!(rev.Index == 0 && wi.Type.Name == "Test Case"))
+            {
+                assignedTo = wi.Fields[WiFieldReference.AssignedTo].Value.ToString();
+            }
 
             if (rev.Fields.HasAnyByRefName(WiFieldReference.AssignedTo))
             {
