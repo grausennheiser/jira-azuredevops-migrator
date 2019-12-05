@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
+﻿
 using Common.Config;
 
 using Migration.Common;
-using Migration.Common.Config;
 using Migration.Common.Log;
 using Migration.Contract.WorkItem;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Web;
 
 namespace JiraExport
 {
@@ -291,6 +293,7 @@ namespace JiraExport
                             "MapArray" => IfChanged<string>(item.Source, isCustomField, MapArray),
                             "MapRemainingWork" => IfChanged<string>(item.Source, isCustomField, MapRemainingWork),
                             "MapRendered" => r => MapRenderedValue(r, item.Source),
+                            "MapXrayTestCaseSteps" => r => MapXrayTestCaseSteps(r, item.Source),
                             _ => IfChanged<string>(item.Source, isCustomField),
                         };
                     }
@@ -496,6 +499,56 @@ namespace JiraExport
             var iterationPath = iterationPaths.Last();
 
             return iterationPath;
+        }
+
+        private (bool, object) MapXrayTestCaseSteps(JiraRevision r, string itemSource)
+        {
+            var sourceField = _jiraProvider.GetCustomId(itemSource);
+
+            if (r.Fields.TryGetValue(itemSource, out object json))
+            {
+                if (json != null)
+                {
+                    JArray steps = new JArray();
+
+                    // seems that an old version of Xray had a different change history, so get manual test steps from r.Parent
+                    if (Regex.Match((string)json, @"\[Step:.*\] \[Data:.*\] \[Expected Result:.*\]", RegexOptions.Singleline).Success)
+                    {
+                        steps = (JArray)r.ParentItem.RemoteIssue["fields"][sourceField]["steps"];
+                    }
+                    else
+                    {
+                        steps = JArray.Parse((string)json);
+                    }
+
+                    if (steps.Count > 0)
+                    {
+                        var lastcount = steps.Max(c => c["index"]);
+                        var output = $"<steps id=\"0\" last=\"{ lastcount }\">";
+
+                        foreach (var step in steps)
+                        {
+                            output += $"<step id=\"{ step["index"] }\" type=\"ValidateStep\">";
+                            output += $"<parameterizedString isformatted=\"true\">{ step["step"] }</parameterizedString>";
+                            output += $"<parameterizedString isformatted=\"true\">{ step["result"] }</parameterizedString>";
+                            if (step.Contains("data"))
+                            {
+                                output += $"<description>{ step["data"] }</description>";
+                            }
+                            output += "</step>";
+                        }
+
+                        output += "</steps>";
+                        output = RevisionUtility.ReplaceHtmlElements(output);
+                        return (true, output);
+                    }
+                    else
+                    {
+                        return (true, string.Empty);
+                    }
+                }
+            }
+            return (false, null);
         }
 
         private string CorrectRenderedHtmlvalue(object value, JiraRevision revision)

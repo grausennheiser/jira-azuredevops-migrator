@@ -28,6 +28,8 @@ namespace Migration.Common
             string userLinkPattern = "<a href=.*? class=\"user-hover\" .*?>(.*?)</a>";
             html = Regex.Replace(html, userLinkPattern, m => m.Groups[1]?.Value);
 
+            html = Regex.Replace(html, "&", "&amp;");
+
             return html;
         }
 

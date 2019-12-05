@@ -27,6 +27,7 @@ namespace Migration.Contract.WorkItem
         public static string Task => "Task";
         public static string Epic => "Epic";
         public static string Feature => "Feature";
+        public static string Test => "Test Case";
 
         public static List<string> GetWorkItemTypes(string[] notForValues = null)
         {

@@ -99,6 +99,7 @@ Currently the tool has a rather naive implementation for mapping certain constru
 |MapArray|Maps an array by replacing comma with semi-colon|
 |MapRemainingWork|Maps and converts a Jira time to hours|
 |MapRendered|Maps field to rendered html format value|
+|MapXrayTestCaseSteps|Maps the XRay test steps to the Azure DevOps test Steps|
 |(default)|Simply copies soure to target|
 
 ## Example configuration
@@ -165,6 +166,10 @@ Currently the tool has a rather naive implementation for mapping certain constru
       {
         "source": "Sub-task",
         "target": "Task"
+      },
+      {
+        "source": "Test",
+        "target": "Test Case"
       }
     ]
   },
@@ -183,7 +188,7 @@ Currently the tool has a rather naive implementation for mapping certain constru
       {
         "source": "description",
         "target": "System.Description",
-		"mapper":"MapRendered"
+        "mapper": "MapRendered"
       },
       {
         "source": "priority",
@@ -327,6 +332,13 @@ Currently the tool has a rather naive implementation for mapping certain constru
         "source": "description",
         "target": "Microsoft.VSTS.TCM.ReproSteps",
         "for": "Bug"
+      },
+      {
+        "source": "Manual Test Steps",
+        "source-type": "name",
+        "target": "Microsoft.VSTS.TCM.Steps",
+        "mapper": "MapXrayTestCaseSteps",
+        "for": "Test Case"
       }
     ]
   }
