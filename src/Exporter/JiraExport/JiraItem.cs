@@ -83,6 +83,39 @@ namespace JiraExport
 
                         UndoAttachmentChange(attachmentChange, attachments);
                     }
+                    else if (item.Field == "Epic Link")
+                    {
+
+                        if (item.FromString != null)
+                        {
+                            linkChanges.Add(new RevisionAction<JiraLink>()
+                            {
+                                ChangeType = RevisionChangeType.Removed,
+                                Value = new JiraLink()
+                                {
+                                    SourceItem = null,
+                                    TargetItem = item.FromString,
+                                    LinkType = "Epic"
+                                }
+                            });
+                        }
+
+                        if (item.ToString != null)
+                        {
+                            linkChanges.Add(new RevisionAction<JiraLink>()
+                            {
+                                ChangeType = RevisionChangeType.Added,
+                                Value = new JiraLink()
+                                {
+                                    SourceItem = item.FromString,
+                                    TargetItem = item.ToString,
+                                    LinkType = "Epic"
+                                }
+                            });
+                        }
+                        fields.Remove(jiraProvider.Settings.EpicLinkField);
+
+                    }
                     else
                     {
                         var (fieldref, from, to) = TransformFieldChange(item, jiraProvider);
@@ -97,8 +130,14 @@ namespace JiraExport
                     }
                 }
 
-                var revision = new JiraRevision(jiraItem) { Time = created, Author = author, AttachmentActions = attachmentChanges, LinkActions = linkChanges, Fields = fieldChanges };
-                revisions.Push(revision);
+                // Stripping out some fieldChange types to reduce revisions which are not importable
+                var fieldTypes = new string[] { "Workflow", "Epic Name", "Epic Color", "Epic Status", "Rank" };
+                fieldChanges = fieldChanges.Where(f => !fieldTypes.Contains(f.Key)).ToDictionary(d => d.Key, d => d.Value);
+                if (attachmentChanges.Count() > 0 || linkChanges.Count() > 0 || fieldChanges.Count() > 0)
+                {
+                    var revision = new JiraRevision(jiraItem) { Time = created, Author = author, AttachmentActions = attachmentChanges, LinkActions = linkChanges, Fields = fieldChanges };
+                    revisions.Push(revision);
+                }
             }
 
             // what is left after undoing all changes is first revision
@@ -190,7 +229,7 @@ namespace JiraExport
 
         private static (string, string, string) TransformFieldChange(JiraChangeItem item, JiraProvider jira)
         {
-            var objectFields = new HashSet<string>() { "assignee", "creator", "reporter" };
+            var objectFields = new HashSet<string>() { "assignee", "creator", "reporter", "Epic Link" };
             string from, to = string.Empty;
 
             string fieldId = item.FieldId ?? GetCustomFieldId(item.Field, jira) ?? item.Field;

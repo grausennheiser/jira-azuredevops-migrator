@@ -582,10 +582,13 @@ namespace WorkItemImport
                 }
             }
 
+            // changed comment to reflect added and removed links
             if (rev.Links.Any(l => l.Change == ReferenceChangeType.Removed))
-                wi.Fields[CoreField.History].Value = $"Removed link(s): { string.Join(";", rev.Links.Where(l => l.Change == ReferenceChangeType.Removed).Select(l => l.ToString()))}";
-            else if (rev.Links.Any(l => l.Change == ReferenceChangeType.Added))
-                wi.Fields[CoreField.History].Value = $"Added link(s): { string.Join(";", rev.Links.Where(l => l.Change == ReferenceChangeType.Added).Select(l => l.ToString()))}";
+                wi.Fields[CoreField.History].Value += $"Removed link(s): { string.Join(";", rev.Links.Where(l => l.Change == ReferenceChangeType.Removed).Select(l => l.ToString()))}\r\n";
+            if (rev.Links.Any(l => l.Change == ReferenceChangeType.Added))
+                if (!string.IsNullOrEmpty((string)wi.Fields[CoreField.History].Value))
+                    wi.Fields[CoreField.History].Value += $"<br />";
+            wi.Fields[CoreField.History].Value += $"Added link(s): { string.Join(";", rev.Links.Where(l => l.Change == ReferenceChangeType.Added).Select(l => l.ToString()))}";
 
             return success;
         }

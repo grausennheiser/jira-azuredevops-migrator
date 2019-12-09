@@ -128,6 +128,10 @@ Currently the tool has a rather naive implementation for mapping certain constru
       },
       {
         "source": "Parent",
+        "target": "System.LinkTypes.Related"
+      },
+      {
+        "source": "Parent Task",
         "target": "System.LinkTypes.Hierarchy-Reverse"
       },
       {

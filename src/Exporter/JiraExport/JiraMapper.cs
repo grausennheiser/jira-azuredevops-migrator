@@ -178,9 +178,17 @@ namespace JiraExport
 
             // map epic link
             AddRemoveSingleLink(r, links, _jiraProvider.Settings.EpicLinkField, "Epic");
+            AddRemoveSingleLink(r, links, "Epic Link", "Epic");
 
             // map parent
-            AddRemoveSingleLink(r, links, "parent", "Parent");
+            if (r.Type == "Sub-task") // fix for parenting sub-tasks with tasks, set link mapping "Parent Task" to System.LinkTypes.Related
+            {
+                AddRemoveSingleLink(r, links, "parent", "Parent Task");
+            }
+            else
+            {
+                AddRemoveSingleLink(r, links, "parent", "Parent");
+            }
 
             return links;
         }
