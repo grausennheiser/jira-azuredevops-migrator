@@ -99,6 +99,8 @@ Currently the tool has a rather naive implementation for mapping certain constru
 |MapArray|Maps an array by replacing comma with semi-colon|
 |MapRemainingWork|Maps and converts a Jira time to hours|
 |MapRendered|Maps field to rendered html format value|
+|MapSplitStringToField|Splits a string with the given seperator, selects the given split part and maps the selected item (>= 0) to a field|
+|MapSplitStringToTagList|Splits a string with the given seperator, selects the given split part and maps the selected item (>=0) or all items (-1) to a tag list|
 |(default)|Simply copies soure to target|
 
 ## Example configuration
@@ -327,6 +329,22 @@ Currently the tool has a rather naive implementation for mapping certain constru
         "source": "description",
         "target": "Microsoft.VSTS.TCM.ReproSteps",
         "for": "Bug"
+      },
+      {
+        "source": "components",
+        "target": "Custom.Device",
+        "mapper": "MapSplitStringToField",
+        "split-seperator" : "-",
+        "split-index" : 0,
+        "item-index": 0
+      },
+      {
+        "source": "components",
+        "target": "Custom.Module",
+        "mapper": "MapSplitStringToTagList",
+        "split-seperator" : "-",
+        "split-index" : 1,
+        "item-index" : -1
       }
     ]
   }

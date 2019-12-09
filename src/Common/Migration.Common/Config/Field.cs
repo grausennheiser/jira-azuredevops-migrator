@@ -27,5 +27,14 @@ namespace Migration.Common.Config
 
         [JsonProperty("mapping")]
         public Mapping Mapping { get; set; }
+
+        [JsonProperty("split-seperator")]
+        public string Seperator { get; set; }
+
+        [JsonProperty("split-index")]
+        public int SplitIndex { get; set; }
+
+        [JsonProperty("item-index")]
+        public int ItemIndex { get; set; } = 0;
     }
 }

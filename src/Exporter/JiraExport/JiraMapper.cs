@@ -291,6 +291,8 @@ namespace JiraExport
                             "MapArray" => IfChanged<string>(item.Source, isCustomField, MapArray),
                             "MapRemainingWork" => IfChanged<string>(item.Source, isCustomField, MapRemainingWork),
                             "MapRendered" => r => MapRenderedValue(r, item.Source),
+                            "MapSplitStringToField" => r => MapSplitStringToField(r, item.Source, item.Seperator, item.SplitIndex, item.ItemIndex),
+                            "MapSplitStringToTagList" => r => MapSplitStringToTagList(r, item.Source, item.Seperator, item.SplitIndex, item.ItemIndex),
                             _ => IfChanged<string>(item.Source, isCustomField),
                         };
                     }
@@ -496,6 +498,55 @@ namespace JiraExport
             var iterationPath = iterationPaths.Last();
 
             return iterationPath;
+        }
+
+        private (bool, object) MapSplitStringToField(JiraRevision r, string itemSource, string seperator, int splitIndex, int itemIndex)
+        {
+            if (r.Fields.TryGetValue(itemSource, out object json))
+            {
+                if (itemIndex == -1)
+                {
+                    Logger.Log(LogLevel.Warning, "Item Index = -1 is only allowed in MapSplitStringToTagList.");
+                    return (false, null);
+                }
+
+                var items = ((string)json).Split(';')
+                            .Where(w => !string.IsNullOrEmpty(w))
+                            .Select(x => x.Replace(seperator, ",").Split(','))
+                            .Where(w2 => w2.Length > splitIndex)
+                            .Select(x => x[splitIndex].Trim())
+                            .ToArray();
+
+                return (true, items[itemIndex]);
+            }
+            return (false, null);
+        }
+
+        private (bool, object) MapSplitStringToTagList(JiraRevision r, string itemSource, string seperator, int splitIndex, int itemIndex)
+        {
+            if (r.Fields.TryGetValue(itemSource, out object json))
+            {
+                var items = ((string)json).Split(';')
+                            .Where(w => !string.IsNullOrEmpty(w))
+                            .Select(x => x.Replace(seperator, ",").Split(','))
+                            .Where(w2 => w2.Length > splitIndex)
+                            .Select(x => x[splitIndex].Trim())
+                            .Distinct()
+                            .ToArray();
+
+                if (itemIndex == -1)
+                {
+                    return (true, string.Join(";", items));
+                }
+                else
+                {
+                    if (items.Length > itemIndex)
+                    {
+                        return (true, items[itemIndex]);
+                    }
+                }
+            }
+            return (false, null);
         }
 
         private string CorrectRenderedHtmlvalue(object value, JiraRevision revision)
